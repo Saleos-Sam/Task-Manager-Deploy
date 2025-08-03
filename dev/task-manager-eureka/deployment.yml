@@ -14,6 +14,8 @@ spec:
       labels:
         app: task-manager-eureka
     spec:
+      imagePullSecrets:
+          - name: ghcr-creds
       containers:
         - name: task-manager-eureka
           image: ghcr.io/saleos-sam/task-manager-eureka:v1.0.0-dev

@@ -12,6 +12,8 @@ spec:
       labels:
         app: task-manager
     spec:
+      imagePullSecrets:
+          - name: ghcr-creds
       containers:
         - name: task-manager
           image: ghcr.io/saleos-sam/task-manager:v1.0.0-dev
