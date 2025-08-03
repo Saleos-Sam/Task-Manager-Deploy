@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-manager-eureka
+  labels:
+    app: task-manager-eureka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: task-manager-eureka
+  template:
+    metadata:
+      labels:
+        app: task-manager-eureka
+    spec:
+      containers:
+        - name: task-manager-eureka
+          image: ghcr.io/saleos-sam/task-manager-eureka:v1.0.0-dev
+          ports:
+            - containerPort: 8761

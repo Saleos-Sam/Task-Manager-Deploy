@@ -1,3 +1,5 @@
 eureka-server/
 gateway/
 taskmanager/
+.idea/
+*.iml
