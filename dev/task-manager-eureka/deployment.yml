@@ -19,5 +19,6 @@ spec:
       containers:
         - name: task-manager-eureka
           image: ghcr.io/saleos-sam/task-manager-eureka:v1.0.0-dev
+          imagePullPolicy: Always
           ports:
             - containerPort: 8761

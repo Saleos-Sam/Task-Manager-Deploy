@@ -17,6 +17,7 @@ spec:
       containers:
         - name: task-manager
           image: ghcr.io/saleos-sam/task-manager:v1.0.0-dev
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
           env:
