@@ -16,6 +16,22 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-creds
+      # Node affinity to schedule on userpool nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.azure.com/agentpool
+                operator: In
+                values:
+                - userpool
+      # Tolerations for userpool node taints
+      tolerations:
+      - key: "workload-type"
+        operator: "Equal"
+        value: "high-performance"
+        effect: "NoSchedule"
       containers:
         - name: task-manager-gateway
           image: ghcr.io/saleos-sam/task-manager-gateway:v1.0.0-dev
