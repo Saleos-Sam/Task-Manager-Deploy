@@ -37,6 +37,23 @@ kubectl taint nodes aks-userpool-35736359-vmss000002 workload-type=high-performa
 
 ## Deployment Configuration
 
+### PostgreSQL Database Deployment
+The `task-manager-postgres` deployment provides the database layer:
+
+#### Database Configuration
+- **Image**: `postgres:15-alpine`
+- **Database**: `taskdb`
+- **User**: `taskuser`
+- **Password**: `taskpass` (stored in Kubernetes secret)
+- **Storage**: 5GB persistent volume
+- **Resources**: 256Mi-512Mi memory, 100m-200m CPU
+
+#### Features
+- **Persistent Storage**: Data survives pod restarts
+- **Health Checks**: Readiness and liveness probes
+- **Security**: Password stored in Kubernetes secret
+- **Node Affinity**: Scheduled on userpool nodes
+
 ### Task Manager API Deployment
 The `task-manager` deployment is configured with:
 
@@ -49,6 +66,11 @@ The `task-manager` deployment is configured with:
 - **Value**: `high-performance`
 - **Effect**: `NoSchedule`
 - **Purpose**: Allows the pod to be scheduled on tainted userpool nodes
+
+#### Dependency Management
+- **Init Container**: Waits for PostgreSQL to be ready before starting
+- **Database Connection**: Automatically connects to PostgreSQL service
+- **Health Checks**: Readiness and liveness probes for Spring Boot actuator
 
 ### Task Manager Gateway Deployment
 The `task-manager-gateway` deployment is configured with the same node affinity and tolerations:
@@ -67,15 +89,23 @@ The `task-manager-gateway` deployment is configured with the same node affinity 
 
 #### Apply All Deployments
 ```bash
-# Apply the task manager API deployment
+# 1. Apply PostgreSQL deployment first (dependency)
+kubectl apply -f dev/k8s/task_manager_postgres_deployment.yml
+kubectl apply -f dev/k8s/task_manager_postgres_service.yml
+
+# 2. Wait for PostgreSQL to be ready
+kubectl wait --for=condition=ready pod -l app=task-manager-postgres --timeout=300s
+
+# 3. Apply the task manager API deployment (depends on PostgreSQL)
 kubectl apply -f dev/k8s/task_manager_api_deployment.yml
 
-# Apply the task manager gateway deployment
+# 4. Apply the task manager gateway deployment
 kubectl apply -f dev/k8s/task_manager_gateway_deployment.yaml
 
-# Verify deployment status
+# 5. Verify deployment status
 kubectl get deployments
 kubectl get pods -o wide
+kubectl get pvc
 ```
 
 #### Check Pod Scheduling
@@ -94,12 +124,73 @@ kubectl describe pod <task-manager-gateway-pod-name>
 task-manager-deploy/
 ├── dev/
 │   └── k8s/
-│       ├── task_manager_api_deployment.yml    # Main deployment with node affinity
-│       ├── task_manager_api_service.yml       # Service configuration
-│       ├── task_manager_eureka_deployment.yml # Eureka server deployment
-│       ├── task_manager_eureka_service.yml    # Eureka service
+│       ├── task_manager_api_deployment.yml      # Main deployment with node affinity & dependencies
+│       ├── task_manager_api_service.yml         # Service configuration
+│       ├── task_manager_postgres_deployment.yml # PostgreSQL database deployment
+│       ├── task_manager_postgres_service.yml    # PostgreSQL service
+│       ├── task_manager_eureka_deployment.yml   # Eureka server deployment
+│       ├── task_manager_eureka_service.yml      # Eureka service
 │       ├── task_manager_gateway_deployment.yaml # Gateway deployment with node affinity
-│       └── task_manager_gateway_service.yaml  # Gateway service
-├── docker-compose.yml                         # Local development setup
-└── README.md                                  # This file
+│       └── task_manager_gateway_service.yaml    # Gateway service
+├── docker-compose.yml                           # Local development setup
+└── README.md                                    # This file
+```
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                       │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐    ┌─────────────────┐                │
+│  │   Agent Pool    │    │   User Pool     │                │
+│  │   (Default)     │    │ (High-Perf)     │                │
+│  │                 │    │                 │                │
+│  │ - Other pods    │    │ - PostgreSQL    │                │
+│  │ - System pods   │    │ - Task Manager  │                │
+│  │                 │    │ - Gateway       │                │
+│  │                 │    │ - Dependencies  │                │
+│  │                 │    │ - Persistent DB │                │
+│  └─────────────────┘    └─────────────────┘                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Dependency Management in Kubernetes
+
+Unlike Docker Compose's `depends_on`, Kubernetes uses different strategies for handling dependencies:
+
+### 1. **Init Containers** (Current Implementation)
+```yaml
+initContainers:
+  - name: wait-for-postgres
+    image: busybox:1.35
+    command: ["sh", "-c", "until nc -z task-manager-postgres 5432; do sleep 2; done"]
+```
+- **Purpose**: Waits for PostgreSQL to be ready before starting main container
+- **Behavior**: Task Manager pod won't start until PostgreSQL is accessible
+
+### 2. **Health Checks**
+```yaml
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8081
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8081
+```
+- **Purpose**: Ensures services are healthy before receiving traffic
+- **Behavior**: Service only receives traffic when ready
+
+### 3. **Deployment Order**
+```bash
+# 1. Deploy database first
+kubectl apply -f task_manager_postgres_deployment.yml
+
+# 2. Wait for database to be ready
+kubectl wait --for=condition=ready pod -l app=task-manager-postgres
+
+# 3. Deploy application
+kubectl apply -f task_manager_api_deployment.yml
 ```

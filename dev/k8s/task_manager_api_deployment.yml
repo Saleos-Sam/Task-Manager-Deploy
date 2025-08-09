@@ -30,12 +30,53 @@ spec:
         operator: "Equal"
         value: "high-performance"
         effect: "NoSchedule"
+      # Init container to wait for PostgreSQL
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL to be ready..."
+              until nc -z task-manager-postgres 5432; do
+                echo "PostgreSQL is not ready yet. Waiting..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
       containers:
         - name: task-manager
           image: ghcr.io/saleos-sam/task-manager:v1.0.0-dev
           imagePullPolicy: Always
           ports:
-            - containerPort: 8081
+            - containerPort: 8080
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://task-manager-postgres:5432/taskdb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: taskuser
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+          # Readiness probe to ensure app is ready
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          # Liveness probe to restart if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
