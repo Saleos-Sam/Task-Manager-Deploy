@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  eureka-server:
+  task-manager-eureka:
     build: ./eureka-server
     container_name: eureka-server
     ports:
@@ -15,7 +15,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - eureka-server
+      - task-manager-eureka
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     networks:
@@ -27,12 +27,45 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - eureka-server
+      - task-manager-eureka
+      - postgres
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     networks:
       - task-network
 
+  postgres:
+    image: postgres:15
+    container_name: taskmanager-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+      POSTGRES_DB: taskdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - task-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - task-network
+
+
 networks:
   task-network:
     driver: bridge
+
+volumes:
+  postgres_data:
