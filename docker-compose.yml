@@ -3,15 +3,15 @@ version: '3.8'
 services:
   task-manager-eureka:
     build: ./eureka-server
-    container_name: eureka-server
+    container_name: task-manager-eureka
     ports:
       - "8761:8761"
     networks:
       - task-network
 
-  gateway:
+  task-manager-gateway:
     build: ./gateway
-    container_name: gateway
+    container_name: task-manager-gateway
     ports:
       - "8080:8080"
     depends_on:
@@ -25,18 +25,21 @@ services:
     build: ./TaskManager
     container_name: task-manager
     ports:
-      - "8081:8081"
+      - "8081:8081"  # Updated to match app's actual port
     depends_on:
       - task-manager-eureka
-      - postgres
+      - task-manager-postgres
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://task-manager-postgres:5432/taskdb
+      - SPRING_DATASOURCE_USERNAME=taskuser
+      - SPRING_DATASOURCE_PASSWORD=taskpass
     networks:
       - task-network
 
-  postgres:
+  task-manager-postgres:
     image: postgres:15
-    container_name: taskmanager-postgres
+    container_name: task-manager-postgres
     restart: always
     environment:
       POSTGRES_USER: taskuser
@@ -58,7 +61,19 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      - task-manager-postgres
+    networks:
+      - task-network
+
+  task-manager-frontend:
+    build: ./task-manager-frontend
+    container_name: task-manager-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - task-manager-gateway
+    environment:
+      - NODE_ENV=production
     networks:
       - task-network
 

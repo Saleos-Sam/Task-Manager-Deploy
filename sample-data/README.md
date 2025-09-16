@@ -103,7 +103,7 @@ SELECT status, COUNT(*) FROM tasks GROUP BY status;
 
 ### Connect via kubectl exec
 ```bash
-kubectl exec -it task-manager-postgres-0 -- psql -U taskuser -d taskdb
+kubectl exec -it task-manager-postgres-0 -- psql -U taskuser -d taskdb -c "SELECT version();"
 ```
 
 ### Copy files and execute

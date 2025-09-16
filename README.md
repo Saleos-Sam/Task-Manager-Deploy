@@ -118,22 +118,45 @@ kubectl describe pod <task-manager-pod-name>
 kubectl describe pod <task-manager-gateway-pod-name>
 ```
 
+## Service Name Consistency
+
+**✅ UPDATED**: Service names are now consistent between Docker Compose and Kubernetes:
+
+| Service | Docker Compose | Kubernetes | Port |
+|---------|---------------|------------|------|
+| Eureka Server | `task-manager-eureka` | `task-manager-eureka` | 8761 |
+| API Gateway | `task-manager-gateway` | `task-manager-gateway` | 8080 |
+| Task Manager API | `task-manager` | `task-manager` | 8080→8081 |
+| PostgreSQL | `task-manager-postgres` | `task-manager-postgres` | 5432 |
+
+**Benefits:**
+- 🔄 **Same service names** across environments
+- 📝 **Consistent configuration** in application properties
+- 🚀 **Easy migration** between Docker Compose and Kubernetes
+- 🐛 **Reduced debugging** time
+
 ## Files Structure
 
 ```
 task-manager-deploy/
 ├── dev/
 │   └── k8s/
-│       ├── task_manager_api_deployment.yml      # Main deployment with node affinity & dependencies
-│       ├── task_manager_api_service.yml         # Service configuration
-│       ├── task_manager_postgres_deployment.yml # PostgreSQL database deployment
-│       ├── task_manager_postgres_service.yml    # PostgreSQL service
-│       ├── task_manager_eureka_deployment.yml   # Eureka server deployment
-│       ├── task_manager_eureka_service.yml      # Eureka service
-│       ├── task_manager_gateway_deployment.yaml # Gateway deployment with node affinity
-│       └── task_manager_gateway_service.yaml    # Gateway service
-├── docker-compose.yml                           # Local development setup
-└── README.md                                    # This file
+│       ├── task_manager_api_deployment.yml       # Main deployment with node affinity & dependencies
+│       ├── task_manager_api_service.yml          # Service configuration
+│       ├── task_manager_postgres_statefulset.yml # PostgreSQL StatefulSet deployment
+│       ├── task_manager_postgres_service.yml     # PostgreSQL service
+│       ├── task_manager_eureka_deployment.yml    # Eureka server deployment
+│       ├── task_manager_eureka_service.yml       # Eureka service
+│       ├── task_manager_gateway_deployment.yaml  # Gateway deployment with node affinity
+│       └── task_manager_gateway_service.yaml     # Gateway service
+├── sample-data/
+│   ├── README.md                                 # Database connection guide
+│   ├── 01_create_tables.sql                     # Database schema
+│   ├── 02_insert_sample_data.sql                # Sample data (31 tasks)
+│   ├── connect_and_populate.bat                 # Windows automation script
+│   └── connect_and_populate.sh                  # Linux/macOS automation script
+├── docker-compose.yml                           # Local development setup (UPDATED)
+└── README.md                                     # This file
 ```
 
 ## Architecture Overview
