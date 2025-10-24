@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: task-manager
+  namespace: task-manager
 spec:
   replicas: 1
   selector:
@@ -49,7 +50,7 @@ spec:
           image: ghcr.io/saleos-sam/task-manager:v1.0.0-dev
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 8081
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
@@ -66,7 +67,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 8081
             initialDelaySeconds: 45
             periodSeconds: 10
             timeoutSeconds: 5
@@ -75,7 +76,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: 8081
             initialDelaySeconds: 90
             periodSeconds: 30
             timeoutSeconds: 5

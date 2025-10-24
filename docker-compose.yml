@@ -2,15 +2,15 @@ version: '3.8'
 
 services:
   task-manager-eureka:
-    build: ./eureka-server
+    build: ../Task-Manager-Eureka
     container_name: task-manager-eureka
     ports:
-      - "8761:8761"
+      - "8761:8761"  #hostport:containerport
     networks:
       - task-network
 
   task-manager-gateway:
-    build: ./gateway
+    build: ../Task-Manager-Gateway
     container_name: task-manager-gateway
     ports:
       - "8080:8080"
@@ -22,7 +22,7 @@ services:
       - task-network
 
   task-manager:
-    build: ./TaskManager
+    build: ../Task-Manager-Springboot
     container_name: task-manager
     ports:
       - "8081:8081"  # Updated to match app's actual port
@@ -66,7 +66,7 @@ services:
       - task-network
 
   task-manager-frontend:
-    build: ./task-manager-frontend
+    build: ../task-manager-frontend-master
     container_name: task-manager-frontend
     ports:
       - "3000:3000"

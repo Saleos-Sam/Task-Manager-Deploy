@@ -103,18 +103,18 @@ SELECT status, COUNT(*) FROM tasks GROUP BY status;
 
 ### Connect via kubectl exec
 ```bash
-kubectl exec -it task-manager-postgres-0 -- psql -U taskuser -d taskdb -c "SELECT version();"
+kubectl exec -it task-manager-postgres-0 -n task-manager -- psql -U taskuser -d taskdb -c "SELECT version();"
 ```
 
 ### Copy files and execute
 ```bash
 # Copy SQL files to pod
-kubectl cp 01_create_tables.sql task-manager-postgres-0:/tmp/
-kubectl cp 02_insert_sample_data.sql task-manager-postgres-0:/tmp/
+kubectl cp 01_create_tables.sql task-manager-postgres-0:/tmp/ -n task-manager
+kubectl cp 02_insert_sample_data.sql task-manager-postgres-0:/tmp/ -n task-manager
 
 # Execute inside pod
-kubectl exec -it task-manager-postgres-0 -- psql -U taskuser -d taskdb -f /tmp/01_create_tables.sql
-kubectl exec -it task-manager-postgres-0 -- psql -U taskuser -d taskdb -f /tmp/02_insert_sample_data.sql
+kubectl exec -it task-manager-postgres-0 -n task-manager -- psql -U taskuser -d taskdb -f /tmp/01_create_tables.sql
+kubectl exec -it task-manager-postgres-0 -n task-manager -- psql -U taskuser -d taskdb -f /tmp/02_insert_sample_data.sql
 ```
 
 ## 📊 Sample Data Overview
