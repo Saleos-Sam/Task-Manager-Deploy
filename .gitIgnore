@@ -3,3 +3,6 @@ gateway/
 taskmanager/
 .idea/
 *.iml
+
+# Development configuration (keep local)
+dev-config.env

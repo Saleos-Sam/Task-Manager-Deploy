@@ -37,15 +37,6 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
-          env:
-            - name: NEXT_PUBLIC_API_URL
-              value: "http://task-manager-gateway.task-manager.svc.cluster.local:8080"
-            - name: NODE_ENV
-              value: "production"
-            - name: HOSTNAME
-              value: "0.0.0.0"
-            - name: PORT
-              value: "3000"
           # Resource limits
           resources:
             requests:
