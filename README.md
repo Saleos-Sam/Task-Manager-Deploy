@@ -1,4 +1,10 @@
+# Workflow Diagram
+
+![Task Manager Workflow](Images/workflow.png)
+
+
 # Task Manager Kubernetes Deployment
+
 
 This repository contains Kubernetes deployment configurations for the Task Manager application with node affinity configurations for dedicated node pool scheduling.
 
