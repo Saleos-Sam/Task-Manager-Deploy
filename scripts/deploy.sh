@@ -75,7 +75,7 @@ get_image_reference() {
 
 # === Build image references ===
 FRONTEND_IMAGE=$(get_image_reference "task-manager-frontend" "$FRONTEND_TAG")
-API_IMAGE=$(get_image_reference "task-manager-api" "$API_TAG")
+API_IMAGE=$(get_image_reference "task-manager" "$API_TAG")
 GATEWAY_IMAGE=$(get_image_reference "task-manager-gateway" "$GATEWAY_TAG")
 EUREKA_IMAGE=$(get_image_reference "task-manager-eureka" "$EUREKA_TAG")
 
@@ -136,7 +136,7 @@ kubectl apply -f $K8S_DIR/task_manager_gateway_service.yaml
 
 # === Deploy Task Manager API ===
 echo -e "${YELLOW}📋 Deploying Task Manager API...${NC}"
-sed "s|image:.*task-manager-api.*|image: $API_IMAGE|g" $K8S_DIR/task_manager_api_deployment.yml | kubectl apply -f -
+sed "s|image:.*task-manager.*|image: $API_IMAGE|g" $K8S_DIR/task_manager_api_deployment.yml | kubectl apply -f -
 kubectl apply -f $K8S_DIR/task_manager_api_service.yml
 
 # === Deploy Frontend ===
